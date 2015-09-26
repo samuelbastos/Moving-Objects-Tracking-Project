@@ -1,0 +1,376 @@
+<html>
+<head>
+<!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+
+<!-- jQuery library -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+
+<!-- Latest compiled JavaScript -->
+<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+<title>Veiculo Client</title>
+
+<style>
+/* estilo que esconde o div */
+.escondido {
+	display: none;
+}
+
+/* estilo que afasta os botoes um dos outros */
+input[type=button] {
+	margin: 5px;
+}
+
+
+</style>
+
+<style>
+		.btn {
+		    padding: 14px 24px;
+		    border: 0 none;
+		    font-weight: 700;
+		    letter-spacing: 1px;
+		    text-transform: uppercase;
+		}
+		 
+		.btn:focus, .btn:active:focus, .btn.active:focus {
+		    outline: 0 none;
+		}
+		 
+		.btn-primary {
+		    background: #363636;
+		    color: #ffffff;
+		}
+		 
+		.btn-primary:hover, .btn-primary:focus, .btn-primary:active, .btn-primary.active, .open > .dropdown-toggle.btn-primary {
+		    background: #363636;
+		}
+		 
+		.btn-primary:active, .btn-primary.active {
+		    background: #363636;
+		    box-shadow: none;
+		}
+			
+			color:"black";
+			
+			}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+	<div class="row">
+	
+			<div class="col-sm-4">
+			<input type="button" value="Return"  class="btn btn-primary btn-block" onclick="window.location.href='index.html';" />
+			</div>
+			<div class="col-sm-4">
+			<input type="button" value="Novo"  class="btn btn-primary btn-block"    onclick=" location.hash = 'novo'; " /> 
+			</div>
+			<div class="col-sm-4">
+			<input type="button" value="Lista"  class="btn btn-primary btn-block"  onclick=" location.hash = 'lista';" />
+			</div>
+	</div>
+	
+</div>
+
+	<br />
+	
+	<div class="container">
+	
+					<div id="novo" class="conteudo escondido">
+							
+							<div class="jumbotron">
+						    
+						    Placa: <input type="text" id="placa" value="" />
+						    
+						    <br /> 
+						    <br /> 
+						     
+						    Modelo: <input type="text" id="modelo" value="" />
+						     
+						    <br />    
+							<br /> 
+							
+							<input type="button" data-toggle="modal" data-target="#myModal" value="Adicionar à Lista" onclick="postIt();" />
+							
+													<!-- Modal -->
+							  <div class="modal fade" id="myModal" role="dialog">
+							    <div class="modal-dialog modal-sm">
+							      <div class="modal-content">
+							        <div class="modal-header">
+							          <button type="button" class="close" data-dismiss="modal">&times;</button>
+							          <h4 class="modal-title">Sucesso</h4>
+							        </div>
+							        <div class="modal-body">
+							          <p>Objeto adicionado adicionado à lista</p>
+							        </div>
+							        <div class="modal-footer">
+							          <button type="button" class="btn btn-default" data-dismiss="modal">Fechar</button>
+							        </div>
+							      </div>
+							    </div>
+							  </div>
+							
+							
+							</div>
+							
+					</div>
+					
+					<div id="detalhe" class="conteudo escondido"> </div>
+						
+					<div id="alteracao" class="conteudo escondido"> </div>			
+
+					<div id="lista" class="conteudo escondido"></div>
+				
+	</div>
+
+	<script>
+				
+			var req = new XMLHttpRequest();
+			
+			// Função de DELETE para deletar um objeto móvel da lista	
+			function deleteIt(id){
+				
+				var path = "/web/veiculo/" + id;
+					
+					req.open("DELETE", path, true);
+					
+					req.onreadystatechange = function(){
+						
+						if(req.readyState == 4 && req.status == 200){
+							console.log(req.responseText);
+							}
+						}
+					
+					req.send();	
+					
+					
+						location.reload ();  //reload da página (única maneira que consegui)
+					}
+
+			// Função de POST para criação de novo objeto móvel
+			function postIt(){
+			
+					var path = "/web/veiculo"
+
+					var placa 	 = document.getElementById('placa').value;
+					var modelo	 = document.getElementById('modelo').value;
+					
+					var result = "{ placa: '" + placa + "', modelo: '" + modelo + "'}";
+					
+					req.open("POST", path, true);
+					
+					req.onreadystatechange = function(){
+						
+						if(req.readyState == 4 && req.status == 200){
+							console.log(req.responseText);
+							}
+						}
+					
+					req.send(result);	
+					
+					}
+			
+			
+			//Atualizar dados de um objeto móvel
+			function updateIt (id){
+				
+				var path = "/web/veiculo/" + id;
+					
+				
+				var placaAlt    = document.getElementById('placaAlt').value;
+				var modeloAlt   = document.getElementById('modeloAlt').value ;
+							
+				var result = "{ placa: '" + placaAlt + "', modelo: '" + modeloAlt + "'}";
+				
+				req.open("PUT", path, true);
+							
+				req.onreadystatechange = function(){
+					
+					if(req.readyState == 4 && req.status == 200){
+						console.log(req.responseText);
+						}
+					}
+				
+				req.send(result);
+			}
+			
+			
+			// Função de renderizar a lista de objetos móveis e opções de DELETE e PUT
+			function renderLista(){
+
+				var path = "/web/veiculo";
+					
+					var resultado = document.getElementById('lista');
+					
+					req.open("GET", path, true);
+					
+					req.onreadystatechange = function(){
+						
+						if(req.readyState == 4 && req.status == 200){
+							var result = JSON.parse(req.responseText);
+							if(result == null){
+								resultado.innerHTML = "nao encontrado";
+							}else{
+								
+								var conteudo = "<div class= \"jumbotron\">" +  '<table  class="table table-condensed">';
+								
+								// renderizar a tabela
+								
+								if(result instanceof Array){
+										for(var i = 0; i < result.length ; i++){
+											var corrente = result[i];	
+											if(i == 0){
+												conteudo += "<tr>";
+												for(key in corrente){
+													
+													if(key != "ultimoId")
+														conteudo += "<th>" + key + "</th>";
+												}
+												conteudo += "<th> Excluir </th>";
+												conteudo += "<th> Alterar </th>";
+												conteudo += "</tr>";		
+											}
+											conteudo += "<tr>";
+											
+											var cont = 0; //contador para sempre incluir button na primeira cell da row
+											
+											for(key in corrente){
+												
+												if(cont == 0){
+													conteudo += "<td><input type='button' class=\"btn btn-success\" value='" + corrente[key] + "' onclick=\"location.hash = " + "'detalhe/" + corrente[key] + "'\";></td>";
+													var guardaIndice = corrente[key]; // Vai guardar qual o id do Objeto Movel (Veiculo)
+												}
+																	
+												else{
+												if(key != "ultimoId")
+												conteudo += "<td>" + corrente[key] + "</td>";
+												}
+												
+												cont++;
+											}
+											cont = 0;
+											conteudo+= "<td><input type='button' class=\"btn btn-danger\" value = 'X' onclick = \" deleteIt(" + guardaIndice + "); \"> </td>"
+											conteudo += "<td><input type='button' class=\"btn btn-warning\" value='+'  onclick = \" location.hash = " + "'alteracao/" + guardaIndice + "'\";></td>";
+											conteudo += "</tr>";
+										}
+									}
+		
+								conteudo += "</table>" + "</div>" + "</div>" +  "</div>";
+								
+								resultado.innerHTML = conteudo;
+							}
+							
+						}
+						
+					}
+					
+					req.send();
+			}
+			
+			
+			// Função que utiliza método GET para obter informação de um objeto móvel específico		
+			function informationById(id){
+				
+				var path = "/web/veiculo/" + id;
+					
+					req.open("GET", path, true);
+					
+					req.onreadystatechange = function(){
+						
+						if(req.readyState == 4 && req.status == 200){
+						
+							var result = JSON.parse(req.responseText);
+							
+							document.getElementById("detalhe").innerHTML =
+								"<div class= \"jumbotron\">" + 
+								"Id:" + result.id + "<br>" + "<br>" + 
+								"Ultimo Id:" + result.ultimoId + "<br>" + "<br>" + 
+								"Placa:" + result.placa + "<br>" + "<br>" + 
+								"Modelo:" + result.modelo + "<br>" + "</div>";
+								
+							}
+						}
+					
+					req.send();			
+			}
+			
+			
+			// Função que mostra uma div dada como parâmetro e esconde as outras	
+			function mostra(id){
+				// esconde todos os div de conteudo
+				var conteudos = document.querySelectorAll('.conteudo');
+				for(var i = 0 ; i < conteudos.length; i ++){
+					var corrente = conteudos[i];
+					corrente.classList.add('escondido');
+				}
+				// mostra o div selecionado
+				var divMostrar = document.getElementById(id);
+				divMostrar.classList.remove('escondido');
+			}	
+			
+			
+			// Função que ao notar a mudança de Hash na URL, vai executar a mudança das aparições dos divs (e no caso de ser lista, renderizar a lista)
+            function hashMudou(){
+				
+                var hash = new String(location.hash);
+                
+                var wHash = hash.replace("#", ""); // valor do hash sem #
+                
+                var arr = wHash.split("/");
+                
+                // arr[0] = antes da '/'
+                // arr[1] = id
+                
+                if(hash.trim().length != 0){
+                	
+                	if(wHash == 'lista'){
+                		renderLista();
+                		mostra(wHash); 
+                	}
+                	
+                	if(wHash == 'detalhe/' + arr[1] )
+                	{
+                		informationById(arr[1]);
+                		mostra(arr[0]); 			
+                	}
+                	
+                	if(wHash == 'novo'){
+                		mostra(wHash);
+                	}
+                	
+                	if(wHash == 'alteracao/' + arr[1])
+                	{	
+                		geraAtualizaHTML(arr[1]);
+                		mostra(arr[0]);
+                	}
+                }
+                
+            }
+
+			
+			// Função que gera o HTML do div de atualizar/alterar objeto
+			function geraAtualizaHTML (id){
+				
+				var altera = document.getElementById('alteracao');
+				
+				altera.innerHTML = "<div class= \"jumbotron\">" +  "Placa: <input type=\"text\" id=\"placaAlt\" value=\"\" /><br /> <br /> Modelo: <input type=\"text\" id=\"modeloAlt\" value=\"\" /><br /> <br /> " +
+				 "<input type='button' value = 'Atualizar' onclick = \" updateIt(" + id + "); \">" + "</div>";
+			}
+			
+			
+			// trecho de código para execução da função de mudança de hash
+			
+            onload = hashMudou;
+            onhashchange = hashMudou;
+            
+            
+	    </script>
+
+</body>
+
+
+</html>

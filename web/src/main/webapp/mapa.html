@@ -1,0 +1,170 @@
+<html>
+
+    <head>
+
+        <title>Mapa</title>
+
+				<!-- Latest compiled and minified CSS -->
+		<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+		
+		<!-- jQuery library -->
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+		
+		<!-- Latest compiled JavaScript -->
+		<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+		        <style>
+            
+            #mapa{
+                background-color: green;
+                width: 90%;
+                height: 90%;
+            }
+
+            body{
+                padding: 0;
+                margin: 0;
+            }
+
+		.btn {
+		    padding: 14px 24px;
+		    border: 0 none;
+		    font-weight: 700;
+		    letter-spacing: 1px;
+		    text-transform: uppercase;
+		}
+		 
+		.btn:focus, .btn:active:focus, .btn.active:focus {
+		    outline: 0 none;
+		}
+		 
+		.btn-primary {
+		    background: #363636;
+		    color: #ffffff;
+		}
+		 
+		.btn-primary:hover, .btn-primary:focus, .btn-primary:active, .btn-primary.active, .open > .dropdown-toggle.btn-primary {
+		    background: #363636;
+		}
+		 
+		.btn-primary:active, .btn-primary.active {
+		    background: #363636;
+		    box-shadow: none;
+		}
+			
+			color:"black";
+			
+			}
+
+        </style>
+
+    </head>
+
+    <body>
+
+			<div class="container">
+			<input type="button" value="Return" class="btn btn-primary btn-block" onclick="window.location.href='index.html';"/>
+			</div>
+	
+	<br />
+        <div id="mapa" class="container"></div>
+
+
+
+        <script src="http://maps.googleapis.com/maps/api/js"></script>
+
+        <script>
+
+        // Uso intensivo de callback para impedir problemas com assincronia (sem isso o código estava rodando sem obter antes os resultados dos GETs )
+        var markers = [];
+        var map = null;
+        var caixaInformacoes = null;
+         
+        function carregaVeiculos(cb){
+            var path = "/web/veiculo";
+            var req = new XMLHttpRequest();
+         
+            req.open("GET", path, true);
+            req.onreadystatechange = function(){
+                if(req.readyState == 4 && req.status == 200){
+                    var veiculos = JSON.parse(req.responseText);
+                    cb(veiculos);
+                }
+            }
+         
+            req.send();
+        }
+         
+         
+        function atualizaMarkers(){
+         
+            // 1) Carregar pessoas
+            carregaVeiculos(function(veiculos) {
+                // 2) Remover markers atuais (limpa mapa)
+                while(markers.length != 0){
+                    var markerRemover = markers.pop();
+                    markerRemover.setMap(null);
+                }
+                // 3) Criar novos markers para as pessoas carregadas
+                for(var i = 0; i < veiculos.length; i++){
+                    var veiculo = veiculos[i];
+         
+                    getSinal(veiculo.ultimoId, veiculo, function(ultimoSinal, veiculo){
+                        var marker = new google.maps.Marker({
+                            position: {lng: (ultimoSinal.lon), lat: (ultimoSinal.lat) },
+                            map: map,
+                            title: 'Veiculo' + " " +  veiculo.id,
+                            desc: veiculo.placa + " " + veiculo.modelo  
+                        });
+
+                        // registrar o evento de click no marcador
+                        google.maps.event.addListener(marker, 'click', mostraInfo);
+         
+                        //markes[i] = marker;
+                        markers.push(marker);    
+                    });            
+                }
+         
+                // 4) Espera 6 segundos e roda ela denovo
+               setTimeout(atualizaMarkers, 6000);
+            });
+        }
+         
+        function mostraInfo(){
+            var marker = this;
+            caixaInformacoes.setContent(marker.desc);
+            caixaInformacoes.setPosition(marker.getPosition());
+            caixaInformacoes.open(map/*, marker*/);
+        }
+         
+        function criaMapa(){
+            map = new google.maps.Map(document.getElementById('mapa'), {
+                center: {lng: -43,lat: -22},
+                zoom: 8
+            });
+         
+            caixaInformacoes = new google.maps.InfoWindow();
+            atualizaMarkers();
+        }
+         
+        function getSinal (id, veiculo, cb){
+            var path = "/web/sinal/" + id;
+            var req = new XMLHttpRequest();
+            req.open("GET", path, true);
+            req.onreadystatechange = function(){
+                if(req.readyState == 4 && req.status == 200){
+                    var result = JSON.parse(req.responseText);
+                    ultimoSinal = result;
+                    cb(ultimoSinal, veiculo);
+                }
+            }
+         
+            req.send();  
+        }
+         
+        onload = criaMapa;
+        </script>
+
+    </body>
+
+
+</html>
